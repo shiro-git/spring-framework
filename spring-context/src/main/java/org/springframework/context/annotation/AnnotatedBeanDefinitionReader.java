@@ -233,8 +233,8 @@ public class AnnotatedBeanDefinitionReader {
 	}
 
 	/**
-	 * Register a bean from the given bean class, deriving its metadata from
-	 * class-declared annotations.
+	 * 从给定的 Bean 类中注册一个 Bean，从类声明的注解中导出其元数据。
+	 * 从给定的 Bean 类中注册一个 Bean，从类声明的注解中导出其元数据。
 	 * @param beanClass the class of the bean
 	 * @param name an explicit name for the bean
 	 * @param qualifiers specific qualifier annotations to consider, if any,
@@ -249,18 +249,27 @@ public class AnnotatedBeanDefinitionReader {
 			@Nullable Class<? extends Annotation>[] qualifiers, @Nullable Supplier<T> supplier,
 			@Nullable BeanDefinitionCustomizer[] customizers) {
 
+		// Create a bean definition instance based on the given bean class
 		AnnotatedGenericBeanDefinition abd = new AnnotatedGenericBeanDefinition(beanClass);
+		// If the current bean should be skipped according to condition evaluation, exit the registration process
 		if (this.conditionEvaluator.shouldSkip(abd.getMetadata())) {
 			return;
 		}
 
+		// Mark the bean as a candidate for configuration class processing
 		abd.setAttribute(ConfigurationClassUtils.CANDIDATE_ATTRIBUTE, Boolean.TRUE);
+		// Set the supplier for creating bean instances
 		abd.setInstanceSupplier(supplier);
+		// Resolve the bean's scope metadata
 		ScopeMetadata scopeMetadata = this.scopeMetadataResolver.resolveScopeMetadata(abd);
+		// Set the bean's scope
 		abd.setScope(scopeMetadata.getScopeName());
+		// Generate the bean's name (using the given name or generating one if null)
 		String beanName = (name != null ? name : this.beanNameGenerator.generateBeanName(abd, this.registry));
 
+		// Process common definition annotations
 		AnnotationConfigUtils.processCommonDefinitionAnnotations(abd);
+		// Process additional qualifiers if provided
 		if (qualifiers != null) {
 			for (Class<? extends Annotation> qualifier : qualifiers) {
 				if (Primary.class == qualifier) {
@@ -274,14 +283,18 @@ public class AnnotatedBeanDefinitionReader {
 				}
 			}
 		}
+		// Customize the bean definition if customizers are provided
 		if (customizers != null) {
 			for (BeanDefinitionCustomizer customizer : customizers) {
 				customizer.customize(abd);
 			}
 		}
 
+		// Wrap the bean definition and prepare for registration 封装bean定义并准备注册
 		BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(abd, beanName);
+		// Apply scoped proxy mode if necessary
 		definitionHolder = AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
+		// Register the bean definition 注册bean定义
 		BeanDefinitionReaderUtils.registerBeanDefinition(definitionHolder, this.registry);
 	}
 
